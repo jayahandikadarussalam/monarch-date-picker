@@ -1,0 +1,48 @@
+/* The active Joget theme styles the input, trigger and clear control. */
+#ui-datepicker-div td.monarch-public-holiday a,
+#ui-datepicker-div td.monarch-public-holiday span {
+    color: #b42318;
+    background: #fff1f0;
+}
+#ui-datepicker-div td.monarch-collective-leave a,
+#ui-datepicker-div td.monarch-collective-leave span {
+    color: #92400e;
+    background: #fffbeb;
+}
+#ui-datepicker-div td.monarch-public-holiday .ui-state-active,
+#ui-datepicker-div td.monarch-collective-leave .ui-state-active {
+    color: #fff;
+    background: #b42318;
+}
+.monarch-date-picker .monarch-holiday-status {
+    display: block;
+    font-size: 0.85em;
+    color: #b42318;
+}
+.monarch-date-picker .monarch-holiday-status:empty {
+    display: none;
+}
+
+/* Disabled days still need pointer events so holiday details can be inspected. */
+#ui-datepicker-div td.monarch-public-holiday,
+#ui-datepicker-div td.monarch-collective-leave {
+    pointer-events: auto !important;
+    cursor: help;
+}
+
+#monarch-holiday-tooltip {
+    position: fixed;
+    z-index: 2147483647;
+    box-sizing: border-box;
+    max-width: min(320px, calc(100vw - 16px));
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #1f2937;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    font: 13px/1.5 Arial, sans-serif;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    text-align: left;
+    pointer-events: none;
+}
