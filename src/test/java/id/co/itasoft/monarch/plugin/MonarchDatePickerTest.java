@@ -53,6 +53,8 @@ public class MonarchDatePickerTest {
     @Test public void emptyValueAndTimeOnlyDoNotCallApi() {
         Picker picker = picker();
         assertTrue(picker.selfValidate(data("")));
+        picker.setProperty("disableSaturday", "true");
+        picker.setProperty("disableSunday", "true");
         picker.setProperty("datePickerType", "timeOnly");
         picker.setProperty("format24hr", "true");
         assertTrue(picker.selfValidate(data("13:30")));
@@ -73,4 +75,48 @@ public class MonarchDatePickerTest {
         assertFalse(picker.selfValidate(data));
         assertTrue(data.getFormErrors().get("date").contains("tidak tersedia"));
     }
+    @Test public void saturdayAndSundayCanBeDisabledIndependentlyWithoutApi() {
+        Picker picker = picker();
+        picker.setProperty("holidayApiEnabled", "");
+        picker.setProperty("disableSaturday", "true");
+        FormData saturday = data("12/26/2026");
+        assertFalse(picker.selfValidate(saturday));
+        assertTrue(saturday.getFormErrors().get("date").contains("Saturday"));
+        assertTrue(picker.selfValidate(data("12/27/2026")));
+        picker.setProperty("disableSaturday", "");
+        picker.setProperty("disableSunday", "true");
+        assertTrue(picker.selfValidate(data("12/26/2026")));
+        FormData sunday = data("12/27/2026");
+        assertFalse(picker.selfValidate(sunday));
+        assertTrue(sunday.getFormErrors().get("date").contains("Sunday"));
+        assertTrue(picker.selfValidate(data("12/28/2026")));
+        assertEquals(0, picker.calendar.requests);
+    }
+    @Test public void bothWeekendsComposeWithHolidayAndHighlightModes() {
+        Picker picker = picker();
+        picker.setProperty("disableSaturday", "true");
+        picker.setProperty("disableSunday", "true");
+        assertFalse(picker.selfValidate(data("12/25/2026")));
+        assertFalse(picker.selfValidate(data("12/26/2026")));
+        assertFalse(picker.selfValidate(data("12/27/2026")));
+        assertTrue(picker.selfValidate(data("12/28/2026")));
+        picker.setProperty("holidayAction", "highlight");
+        assertTrue(picker.selfValidate(data("12/25/2026")));
+        assertFalse(picker.selfValidate(data("12/26/2026")));
+    }
+    @Test public void weekendRulesApplyToDateTimeAndUtcInUserTimezone() {
+        Picker picker = picker();
+        picker.setProperty("holidayApiEnabled", "");
+        picker.setProperty("disableSaturday", "true");
+        picker.setProperty("disableSunday", "true");
+        picker.setProperty("format24hr", "true");
+        for (String type : new String[]{"dateTime", "utcdateTime"}) {
+            picker.setProperty("datePickerType", type);
+            assertFalse(picker.selfValidate(data("12/26/2026 00:30")));
+            assertFalse(picker.selfValidate(data("12/27/2026 23:30")));
+            assertTrue(picker.selfValidate(data("12/28/2026 00:30")));
+        }
+        assertEquals(0, picker.calendar.requests);
+    }
+
 }

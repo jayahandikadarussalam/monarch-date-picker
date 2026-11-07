@@ -53,6 +53,16 @@
 {
     title : '@@monarch.datepicker.holidays@@',
     properties : [{
+        name : 'disableSaturday',
+        label : '@@monarch.datepicker.disableSaturday@@',
+        type : 'checkbox',
+        options : [{value : 'true', label : ''}]
+    }, {
+        name : 'disableSunday',
+        label : '@@monarch.datepicker.disableSunday@@',
+        type : 'checkbox',
+        options : [{value : 'true', label : ''}]
+    }, {
         name : 'holidayApiEnabled',
         label : '@@monarch.datepicker.holidayApiEnabled@@',
         type : 'checkbox',

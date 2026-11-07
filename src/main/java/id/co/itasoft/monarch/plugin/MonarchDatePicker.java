@@ -39,17 +39,17 @@ public class MonarchDatePicker extends org.joget.apps.form.lib.DatePicker implem
 
     @Override
     public String getName() {
-        return "Monarch Date Picker";
+        return "Shadow Date Picker";
     }
 
     @Override
     public String getVersion() {
-        return "1.1.3";
+        return "1.1.6";
     }
 
     @Override
     public String getDescription() {
-        return "Monarch Date Picker Element";
+        return "Shadow Date Picker Element";
     }
 
     @Override
@@ -161,7 +161,7 @@ public class MonarchDatePicker extends org.joget.apps.form.lib.DatePicker implem
 
     @Override
     public String getLabel() {
-        return "Monarch Date Picker";
+        return "Shadow Date Picker";
     }
 
     @Override
@@ -299,7 +299,7 @@ public class MonarchDatePicker extends org.joget.apps.form.lib.DatePicker implem
                 return false;
             }
 
-            if (!validateHoliday(formattedValue, displayFormat, formData)) {
+            if (!validateDateRestrictions(formattedValue, displayFormat, formData)) {
                 valid = false;
             }
 
@@ -389,9 +389,12 @@ public class MonarchDatePicker extends org.joget.apps.form.lib.DatePicker implem
         return HolidayCalendar.INSTANCE;
     }
 
-    private boolean validateHoliday(String value, String displayFormat, FormData formData) {
-        if (!"true".equalsIgnoreCase(getPropertyString("holidayApiEnabled"))
-                || !"disable".equals(getPropertyString("holidayAction"))
+    private boolean validateDateRestrictions(String value, String displayFormat, FormData formData) {
+        boolean blockHolidays = "true".equalsIgnoreCase(getPropertyString("holidayApiEnabled"))
+                && "disable".equals(getPropertyString("holidayAction"));
+        boolean disableSaturday = "true".equalsIgnoreCase(getPropertyString("disableSaturday"));
+        boolean disableSunday = "true".equalsIgnoreCase(getPropertyString("disableSunday"));
+        if ((!blockHolidays && !disableSaturday && !disableSunday)
                 || "timeOnly".equalsIgnoreCase(getPropertyString("datePickerType"))
                 || FormUtil.isReadonly(this, formData)) {
             return true;
@@ -402,6 +405,15 @@ public class MonarchDatePicker extends org.joget.apps.form.lib.DatePicker implem
             parser.setLenient(false);
             parser.setTimeZone(getUserTZ());
             LocalDate date = parser.parse(value).toInstant().atZone(getUserTZ().toZoneId()).toLocalDate();
+            if ((disableSaturday && date.getDayOfWeek() == java.time.DayOfWeek.SATURDAY)
+                    || (disableSunday && date.getDayOfWeek() == java.time.DayOfWeek.SUNDAY)) {
+                formData.addFormError(id, date.getDayOfWeek() == java.time.DayOfWeek.SATURDAY
+                        ? "Saturday cannot be selected." : "Sunday cannot be selected.");
+                return false;
+            }
+            if (!blockHolidays) {
+                return true;
+            }
             String holiday = getHolidayCalendar().getHoliday(getPropertyString("holidayApiUrl"), date,
                     "true".equalsIgnoreCase(getPropertyString("holidayIncludeLeave")));
             if (holiday != null) {

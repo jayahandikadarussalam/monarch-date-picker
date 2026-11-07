@@ -26,7 +26,7 @@ public class TemplateTest {
         data.put("displayFormat", "MM/DD/YYYY");
         data.put("clientDatePickerType", "");
         data.put("request", new Request());
-        data.put("pluginVersion", "1.1.3");
+        data.put("pluginVersion", "1.1.6");
         Configuration configuration = new Configuration();
         configuration.setDirectoryForTemplateLoading(new File("src/main/resources/templates"));
         Template template = configuration.getTemplate("monarchDatePicker.ftl");
@@ -47,17 +47,21 @@ public class TemplateTest {
     }
     @Test public void pluginAssetsUseVersionedUrlsToBypassPreviousReleaseCache() throws Exception {
         String html = render(new HashMap<String, Object>());
-        assertTrue(html.contains("MonarchDatePicker/js/monarch-datepicker.js?v=1.1.3"));
-        assertTrue(html.contains("MonarchDatePicker/css/datePicker.css?v=1.1.3"));
+        assertTrue(html.contains("MonarchDatePicker/js/monarch-datepicker.js?v=1.1.6"));
+        assertTrue(html.contains("MonarchDatePicker/css/datePicker.css?v=1.1.6"));
     }
     @Test public void explicitSizeAndHolidayPropertiesAreRendered() throws Exception {
         Map<String, Object> properties = new HashMap<>();
         properties.put("size", "40");
         properties.put("holidayApiEnabled", "true");
+        properties.put("disableSaturday", "true");
+        properties.put("disableSunday", "true");
         properties.put("holidayApiUrl", "https://example.org/\"quote");
         properties.put("holidayAction", "disable");
         String html = render(properties);
         assertTrue(html.contains("size=\"40\""));
+        assertTrue(html.contains("disableSaturday: \"true\""));
+        assertTrue(html.contains("disableSunday: \"true\""));
         assertTrue(html.contains("holidayApiEnabled: \"true\""));
         assertTrue(html.contains("holidayAction: \"disable\""));
         assertTrue(html.contains("\\\"quote"));

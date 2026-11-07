@@ -1,8 +1,8 @@
-# Monarch Date Picker 1.1.3
+# Shadow Date Picker 1.1.6
 
 Joget form element using the active Joget theme and native `cdatepicker` initializer.
 
-The input now omits an empty `size` attribute, matching Joget's template and allowing the theme to determine its width. Time picker dependencies are loaded even when the form contains only Monarch fields. The native calendar, clear control, keyboard handling, and date range settings remain in use. UTC mode is preserved during rendering so submitted values retain their UTC conversion behavior.
+The input now omits an empty `size` attribute, matching Joget's template and allowing the theme to determine its width. Time picker dependencies are loaded even when the form contains only Shadow Date Picker fields. The native calendar, clear control, keyboard handling, and date range settings remain in use. UTC mode is preserved during rendering so submitted values retain their UTC conversion behavior.
 
 Version 1.1.3 includes the plugin version in its CSS and JavaScript URLs. This prevents the browser from reusing assets cached for up to an hour by Joget's plugin resource servlet after an upgrade. Reload the form page after uploading the new JAR.
 
@@ -16,14 +16,16 @@ Version 1.1.1 fixes the OSGi startup failure introduced in 1.1.0. Joget exports 
 mvn test package
 ```
 
-Upload `target/monarch-date-picker-1.1.3.jar` in Joget's **Manage Plugins**, replacing the existing Monarch Date Picker plugin. Reload the form page after updating the plugin.
+Upload `target/monarch-date-picker-1.1.6.jar` in Joget's **Manage Plugins**, replacing the existing Date Picker plugin. Reload the form page after updating the plugin. The plugin is displayed as **Shadow Date Picker** under the **Monarch** category; its class and bundle identifiers are retained for compatibility with existing forms.
 
 ## Public Holidays properties
 
-In Form Builder, select **Monarch Date Picker → Public Holidays**:
+In Form Builder, select **Shadow Date Picker → Public Holidays**:
 
 | Property | Behavior |
 | --- | --- |
+| Disable Saturday | Prevent selecting/submitting Saturdays, independently of the Holiday API. Off by default. |
+| Disable Sunday | Prevent selecting/submitting Sundays, independently of the Holiday API. Off by default. |
 | Enable Holiday API | Enable integration; existing forms remain unchanged until enabled. |
 | Holiday API Base URL | Default `https://tanggalmerah.upset.dev`. A compatible base URL or `/api/holidays` endpoint is accepted, without query parameters or fragments. |
 | Holiday Selection: Highlight | Mark national holidays red while allowing selection. |
@@ -50,7 +52,7 @@ The compatibility check uses Joget's actual migration classes and Felix configur
 joget_lib="/path/to/tomcat/webapps/jw/WEB-INF/lib"
 mkdir -p target/compatibility
 javac -proc:none -cp "$joget_lib/*" -d target/compatibility src/test/compatibility/VerifyJogetBundle.java
-java -Dwflow.home=target/compatibility/wflow -cp "target/compatibility:$joget_lib/*" VerifyJogetBundle target/monarch-date-picker-1.1.3.jar target/compatibility
+java -Dwflow.home=target/compatibility/wflow -cp "target/compatibility:$joget_lib/*" VerifyJogetBundle target/monarch-date-picker-1.1.6.jar target/compatibility
 ```
 
 Optionally append the original `target/monarch-date-picker-1.1.0.jar` as the third argument to reproduce the previous Jakarta Servlet resolution failure before checking the fixed bundle. This check passed using the installed Joget 9.1.2 libraries and Felix 7.0.5.

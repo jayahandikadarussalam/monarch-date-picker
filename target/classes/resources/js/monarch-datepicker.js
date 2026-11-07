@@ -153,6 +153,9 @@
             input.data("monarchDatepicker", true);
             var settings = $.extend({}, options);
             var enabled = settings.holidayApiEnabled === "true" && settings.datePickerType !== "timeOnly";
+            var disableSaturday = settings.disableSaturday === "true" && settings.datePickerType !== "timeOnly";
+            var disableSunday = settings.disableSunday === "true" && settings.datePickerType !== "timeOnly";
+            var dateRestrictions = enabled || disableSaturday || disableSunday;
             var block = settings.holidayAction === "disable";
             var includeLeave = settings.holidayIncludeLeave === "true";
             var subscriptions = Object.create(null);
@@ -161,6 +164,16 @@
             var visibleYear;
             var beforeShowDay = settings.beforeShowDay;
             var monthChanged = settings.onChangeMonthYear;
+
+            function weekendReason(date) {
+                if (disableSaturday && date.getDay() === 6) {
+                    return "Saturday cannot be selected."; // "Hari Sabtu tidak dapat dipilih.";
+                }
+                if (disableSunday && date.getDay() === 0) {
+                    return "Sunday cannot be selected."; // "Hari Minggu tidak dapat dipilih.";
+                }
+                return "";
+            }
 
             function message(text) {
                 status.text(text);
@@ -198,6 +211,7 @@
 
             function validate() {
                 var error = "";
+                var invalid = false;
                 var current = null;
                 if (input.val()) {
                     try {
@@ -206,7 +220,10 @@
                         // Joget validates the date format on submission.
                     }
                 }
-                if (current) {
+                if (current && weekendReason(current)) {
+                    error = weekendReason(current);
+                    invalid = true;
+                } else if (current && enabled) {
                     var selectedEntry = load(current.getFullYear());
                     if (!selectedEntry.days) {
                         error = selectedEntry.failed ? unavailable : loading;
@@ -218,11 +235,12 @@
                             }).join("; ");
                         }
                     }
+                    invalid = block && error !== "";
                 }
                 // Readonly fields do not participate in HTML constraint validation;
                 // the plugin also enforces this rule in selfValidate on the server.
-                input[0].setCustomValidity(block ? error : "");
-                if (!error && visibleYear) {
+                input[0].setCustomValidity(invalid ? error : "");
+                if (!error && enabled && visibleYear) {
                     var visibleEntry = load(visibleYear);
                     if (!visibleEntry.days) {
                         error = visibleEntry.failed ? unavailable : loading;
@@ -231,7 +249,7 @@
                 message(error);
             }
 
-            if (enabled) {
+            if (dateRestrictions) {
                 status = $("<span>", {"class": "monarch-holiday-status", "role": "status",
                     "aria-live": "polite", id: input[0].id + "_holiday_status"});
                 input.parent().append(status);
@@ -244,11 +262,19 @@
                 settings.beforeShowDay = function (date) {
                     var inst = $.datepicker._getInst(input[0]);
                     visibleYear = inst.drawYear || date.getFullYear();
-                    var original = beforeShowDay ? beforeShowDay.call(this, date) : [true, "", ""];
+                    var original = beforeShowDay ? beforeShowDay.call(this, date).slice() : [true, "", ""];
+                    var weekend = weekendReason(date);
+                    if (weekend) {
+                        original[0] = false;
+                        original[1] = (original[1] + " monarch-disabled-weekend").trim();
+                    }
+                    if (!enabled) {
+                        return original;
+                    }
                     var entry = load(date.getFullYear());
                     if (!entry.days) {
                         message(entry.failed ? unavailable : loading);
-                        return [original[0] && !block, original[1], entry.failed ? unavailable : loading];
+                        return [original[0] && !block, original[1], original[2] || (weekend ? "" : (entry.failed ? unavailable : loading))];
                     }
                     var matches = holidays(entry, date);
                     if (!matches.length) {
@@ -273,7 +299,7 @@
 
             // Use the same native initializer as Joget's Date Picker (clear, range, keyboard, time).
             input.cdatepicker(settings);
-            if (enabled) {
+            if (dateRestrictions) {
                 input.on("change.monarchHoliday", validate);
                 input.on("click.monarchHoliday focus.monarchHoliday", function () {
                     var inst = $.datepicker._getInst(input[0]);

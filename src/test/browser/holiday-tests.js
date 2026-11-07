@@ -46,7 +46,7 @@
     }
     try {
         var disabled = make("API disabled", {holidayApiEnabled: ""});
-        var time = make("Time only", {datePickerType: "timeOnly", timeFormat: "HH:mm"});
+        var time = make("Time only", {datePickerType: "timeOnly", timeFormat: "HH:mm", disableSaturday: "true", disableSunday: "true"});
         assert(requests.length === 0, "Disabled integration and Time Only make no API calls");
         var marked = make("Highlight holidays");
         marked.val("12/25/2026").trigger("change");
@@ -87,6 +87,31 @@
         var before = requests.length;
         marked.monarchDatepicker({holidayApiEnabled: "true"});
         assert(marked.parent().find("a.close-icon").length === 1 && requests.length === before, "Repeated initialization creates no duplicate controls or requests");
+        var beforeWeekend = requests.length;
+        var saturdayOnly = make("Disable Saturday only", {holidayApiEnabled: "", disableSaturday: "true"});
+        saturdayOnly.val("12/26/2026").trigger("change");
+        var saturdayDay = saturdayOnly.datepicker("option", "beforeShowDay");
+        assert(!saturdayDay(new Date(2026, 11, 26))[0] && saturdayDay(new Date(2026, 11, 27))[0], "Saturday can be disabled while Sunday remains selectable");
+        assert(saturdayOnly[0].validationMessage.indexOf("Saturday") >= 0, "Manual Saturday input is rejected without the Holiday API");
+        saturdayOnly.val("12/28/2026").trigger("change");
+        assert(saturdayOnly[0].validationMessage === "", "Changing to a weekday clears the weekend error");
+        var sundayOnly = make("Disable Sunday only", {holidayApiEnabled: "", disableSunday: "true"});
+        sundayOnly.val("12/27/2026").trigger("change");
+        var sundayDay = sundayOnly.datepicker("option", "beforeShowDay");
+        assert(!sundayDay(new Date(2026, 11, 27))[0] && sundayDay(new Date(2026, 11, 26))[0], "Sunday can be disabled while Saturday remains selectable");
+        assert(sundayOnly[0].validationMessage.indexOf("Sunday") >= 0 && requests.length === beforeWeekend, "Weekend rules make no API calls");
+        var both = make("Disable weekends with highlight", {disableSaturday: "true", disableSunday: "true"});
+        var bothDay = both.datepicker("option", "beforeShowDay");
+        assert(!bothDay(new Date(2026, 11, 26))[0] && !bothDay(new Date(2026, 11, 27))[0]
+            && bothDay(new Date(2026, 11, 25))[0], "Both weekends stay disabled when holidays are highlight-only");
+        saturdayOnly.datepicker("setDate", new Date(2026, 11, 1));
+        saturdayOnly.datepicker("show");
+        resolve(); await wait();
+        var weekendCell = $("#ui-datepicker-div td.monarch-disabled-weekend").first();
+        weekendCell.trigger("mouseenter");
+        assert(!$("#monarch-holiday-tooltip").length && !weekendCell.attr("title"), "Disabled weekend has neither a custom tooltip nor a native title tooltip");
+        saturdayOnly.datepicker("hide");
+        await wait();
         // Keep a real calendar visible for visual inspection.
         blocked.datepicker("setDate", new Date(2026, 11, 1));
         blocked.datepicker("show");
@@ -116,7 +141,7 @@
         await wait();
         assert(!$("#monarch-holiday-tooltip").length, "Closing the calendar removes the holiday tooltip");
         blocked.datepicker("show");
-        document.getElementById("summary").textContent = failures ? failures + " BROWSER TESTS FAILED" : "ALL 27 BROWSER TESTS PASSED";
+        document.getElementById("summary").textContent = failures ? failures + " BROWSER TESTS FAILED" : "ALL " + results.children.length + " BROWSER TESTS PASSED";
         document.title = document.getElementById("summary").textContent;
     } catch (error) {
         document.getElementById("summary").textContent = "BROWSER TEST ERROR: " + error.stack;
